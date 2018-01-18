@@ -27,13 +27,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SoundEngine
+namespace NSoundEngine
 {
     /*
      * Class to associate the List of PlayerTuple's
      * playing the associated buffer.
      */
-    class SfxResTuple : IDisposable
+    public class SfxResTuple : IDisposable
     {
         /*
          * Sound buffer.

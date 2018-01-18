@@ -27,14 +27,14 @@ using System;
 using System.IO;
 using NAudio.Wave;
 
-namespace SoundEngine
+namespace NSoundEngine
 {
     /*
      * Wrapper class for player functionality that
      * unifies the player object, the file reader
      * and the memory stream containing the file.
      */
-    class PlayerTuple : IDisposable
+    public class PlayerTuple : IDisposable
     {
         /*
          * Player object implemented through NAudio's

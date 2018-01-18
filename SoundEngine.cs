@@ -27,12 +27,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SoundEngine
+namespace NSoundEngine
 {
     /*
      * Singleton class for the general SoundEngine logic.
      */
-    class SoundEngine
+    public class SoundEngine
     {
         /*
          * Internal Instance variable
