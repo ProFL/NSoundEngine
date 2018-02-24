@@ -37,62 +37,53 @@ namespace NSoundEngine
         /*
          * Internal Instance variable
          */
-        protected static SoundEngine _instance;
+        protected static SoundEngine SingletonInstance { get; set; }
         /*
          * Gets the singleton's instance if it was already created
          * or creates it otherwise.
          */
-        public static SoundEngine Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new SoundEngine();
-                }
-                return _instance;
-            }
-        }
+        public static SoundEngine Instance => SingletonInstance ?? (SingletonInstance = new SoundEngine());
+
         /* 
          * Instantiate and populate this dictionary previously to calling
          * the Instance for the first time for its contents to be loaded
          * as audio resources at construction time.
-         * Its key entries must have one of the valid SUFFIXes.
+         * Its key entries must have one of the valid prefixes.
          * Or an exception will be thrown at construction time.
          */
-        public static Dictionary<string, byte[]> InitialAudioResources;
+        public static Dictionary<string, byte[]> InitialAudioResources { get; set; }
 
         /*
          * Dictionary of the bgm player structures.
          */
-        protected Dictionary<string, PlayerTuple> _bgmPlayers;
+        protected Dictionary<string, PlayerTuple> BgmPlayers { get; set; }
         /*
          * Dictionary of the SFX Player list of structures
          * per audio resource.
          */
-        protected Dictionary<string, SfxResTuple> _sfxResPlayers;
+        protected Dictionary<string, SfxResTuple> SfxResPlayers { get; set; }
 
         /*
-         * Mandatory suffix for BGM audio resources.
+         * Mandatory prefix for BGM audio resources.
          */
-        public const string BGM_SUFFIX = "bgm.";
+        public const string BGM_PREFIX = "bgm.";
         /*
-         * Mandatory suffix for sfx audio resources.
+         * Mandatory prefix for sfx audio resources.
          */
-        public const string SFX_SUFFIX = "sfx.";
+        public const string SFX_PREFIX = "sfx.";
 
         /*
-         * Default no suffix exception message string.
+         * Default no prefix exception message string.
          */
-        protected const string EXCEPTION_NO_SUFFIX = "The key must contain the default bgm or sfx suffix!";
+        protected const string EXCEPTION_NO_PREFIX = "The key must contain the default bgm or sfx prefix!";
         /*
-         * Default no BGM suffix exception message string.
+         * Default no BGM prefix exception message string.
          */
-        protected const string EXCEPTION_NO_BGM_SUFFIX = "The key must contain the default bgm suffix!";
+        protected const string EXCEPTION_NO_BGM_PREFIX = "The key must contain the default bgm prefix!";
         /*
-         * Default no SFX suffix exception message string.
+         * Default no SFX prefix exception message string.
          */
-        protected const string EXCEPTION_NO_SFX_SUFFIX = "The key must contain the default sfx suffix!";
+        protected const string EXCEPTION_NO_SFX_PREFIX = "The key must contain the default sfx prefix!";
 
         /*
          * Default key not found exception message string.
@@ -106,15 +97,13 @@ namespace NSoundEngine
          */
         protected SoundEngine()
         {
-            _bgmPlayers = new Dictionary<string, PlayerTuple>();
-            _sfxResPlayers = new Dictionary<string, SfxResTuple>();
+            BgmPlayers = new Dictionary<string, PlayerTuple>();
+            SfxResPlayers = new Dictionary<string, SfxResTuple>();
 
-            if (InitialAudioResources != null)
+            if (InitialAudioResources == null) return;
+            foreach (var item in InitialAudioResources)
             {
-                foreach (var item in InitialAudioResources)
-                {
-                   AddAudioResource(item.Key, item.Value);
-                }
+                AddAudioResource(item.Key, item.Value);
             }
         }
 
@@ -122,27 +111,27 @@ namespace NSoundEngine
          * \brief Method to add new audio resources to the Sound Engine.
          * 
          * Will throw an exception if the key doesn't contain one of the
-         * valid suffixes.
+         * valid prefixes.
          * 
          * \param key The audio resource's key, that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX
+         * BGM_PREFIX or SFX_PREFIX
          * \param buffer The byte array that represents the buffer that
          * holds the MP3 file, initially meant to be used with
          * Embedded Resources.
          */
         public void AddAudioResource(string key, byte[] buffer)
         {
-            if (key.Contains(BGM_SUFFIX))
+            if (key.Contains(BGM_PREFIX))
             {
-                _bgmPlayers.Add(key, new PlayerTuple(buffer, false));
+                BgmPlayers.Add(key, new PlayerTuple(buffer, false));
             }
-            else if (key.Contains(SFX_SUFFIX))
+            else if (key.Contains(SFX_PREFIX))
             {
-                _sfxResPlayers.Add(key, new SfxResTuple(buffer));
+                SfxResPlayers.Add(key, new SfxResTuple(buffer));
             }
             else
             {
-                throw new Exception(EXCEPTION_NO_SUFFIX);
+                throw new Exception(EXCEPTION_NO_PREFIX);
             }
         }        
 
@@ -151,35 +140,35 @@ namespace NSoundEngine
          * provided key, freeing memory.
          * 
          * Willl throw an exception if either the key doesn't contain
-         * a valid suffix or if it is not found.
+         * a valid prefix or if it is not found.
          * 
          * \param key The resource's key that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX.
+         * BGM_PREFIX or SFX_PREFIX.
          */
         public void RemoveAudioResource(string key)
         {
-            if (key.Contains(BGM_SUFFIX))
+            if (key.Contains(BGM_PREFIX))
             {
-                if (!_bgmPlayers.Keys.Contains(key))
+                if (!BgmPlayers.Keys.Contains(key))
                 {
                     throw new Exception(EXCEPTION_KEY_NOT_FOUND);
                 }
-                _bgmPlayers[key].Stop();
-                _bgmPlayers[key].Dispose();
-                _bgmPlayers.Remove(key);
+                BgmPlayers[key].Stop();
+                BgmPlayers[key].Dispose();
+                BgmPlayers.Remove(key);
             }
-            else if (key.Contains(SFX_SUFFIX))
+            else if (key.Contains(SFX_PREFIX))
             {
-                if (!_sfxResPlayers.Keys.Contains(key))
+                if (!SfxResPlayers.Keys.Contains(key))
                 {
                     throw new Exception(EXCEPTION_KEY_NOT_FOUND);
                 }
-                _sfxResPlayers[key].Dispose();
-                _sfxResPlayers.Remove(key);
+                SfxResPlayers[key].Dispose();
+                SfxResPlayers.Remove(key);
             }
             else
             {
-                throw new Exception(EXCEPTION_NO_SUFFIX);
+                throw new Exception(EXCEPTION_NO_PREFIX);
             }
         }
 
@@ -187,36 +176,36 @@ namespace NSoundEngine
          * \brief Plays a sound, BGM or SFX, identified by its key
          * 
          * Will throw an exception if either the key is non conformant
-         * to the default suffixes or if it is not found.
+         * to the default prefixes or if it is not found.
          * 
          * \param key The resource's key that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX.
+         * BGM_PREFIX or SFX_PREFIX.
          * \param looping Identifies if the sound must be played
          * looping (until manually stopped) (true) or not (false).
          */
         public void PlaySound(string key, bool looping)
         {
-            if (key.Contains(BGM_SUFFIX))
+            if (key.Contains(BGM_PREFIX))
             {
-                if (!_bgmPlayers.Keys.Contains(key))
+                if (!BgmPlayers.Keys.Contains(key))
                 {
                     throw new Exception(EXCEPTION_KEY_NOT_FOUND);
                 }
-                var playerTuple = _bgmPlayers[key];
+                var playerTuple = BgmPlayers[key];
                 playerTuple.IsLooping = looping;
                 playerTuple.Play();
             }
-            else if (key.Contains(SFX_SUFFIX))
+            else if (key.Contains(SFX_PREFIX))
             {
-                if (!_sfxResPlayers.Keys.Contains(key))
+                if (!SfxResPlayers.Keys.Contains(key))
                 {
                     throw new Exception(EXCEPTION_KEY_NOT_FOUND);
                 }
-                _sfxResPlayers[key].PlaySfx(looping);
+                SfxResPlayers[key].PlaySfx(looping);
             }
             else
             {
-                throw new Exception(EXCEPTION_NO_SUFFIX);
+                throw new Exception(EXCEPTION_NO_PREFIX);
             }
         }
 
@@ -225,7 +214,7 @@ namespace NSoundEngine
          */
         public void StopBgm()
         {
-            foreach (var playerTuple in _bgmPlayers.Values)
+            foreach (var playerTuple in BgmPlayers.Values)
             {
                 playerTuple.Stop();
             }
@@ -235,24 +224,24 @@ namespace NSoundEngine
          * \brief Stops playback of the specified BGM.
          * 
          * Will throw an exception if either the key is non
-         * conformant to the key suffixes or if it is not
+         * conformant to the key prefixes or if it is not
          * found.
          * 
          * \param key The resource's key that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX.
+         * BGM_PREFIX or SFX_PREFIX.
          */
         public void StopBgm(string key)
         {
-            if (!key.Contains(BGM_SUFFIX))
+            if (!key.Contains(BGM_PREFIX))
             {
-                throw new Exception(EXCEPTION_NO_BGM_SUFFIX);
+                throw new Exception(EXCEPTION_NO_BGM_PREFIX);
             }
-            if (!_bgmPlayers.Keys.Contains(key))
+            if (!BgmPlayers.Keys.Contains(key))
             {
                 throw new Exception(EXCEPTION_KEY_NOT_FOUND);
             }
 
-            _bgmPlayers[key].Stop();
+            BgmPlayers[key].Stop();
         }
 
         /*
@@ -260,7 +249,7 @@ namespace NSoundEngine
          */
         public void StopSfx()
         {
-            foreach (var sfxResTuple in _sfxResPlayers.Values)
+            foreach (var sfxResTuple in SfxResPlayers.Values)
             {
                 sfxResTuple.StopSfx();
             }
@@ -270,35 +259,35 @@ namespace NSoundEngine
          * \brief Stops playback of the SFX specified by it's key.
          * 
          * Throws an exception if the key doesn't contain one of
-         * the necessary suffixes or if it is not found.
+         * the necessary prefixes or if it is not found.
          * 
          * \param key The resource's key that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX.
+         * BGM_PREFIX or SFX_PREFIX.
          * \param onlyLooping
          * \param onlyNotLooping
          */
         public void StopSfx(string key, bool onlyLooping = false, bool onlyNotLooping = false)
         {
-            if (!key.Contains(SFX_SUFFIX))
+            if (!key.Contains(SFX_PREFIX))
             {
-                throw new Exception(EXCEPTION_NO_SFX_SUFFIX);
+                throw new Exception(EXCEPTION_NO_SFX_PREFIX);
             }
-            if (!_sfxResPlayers.Keys.Contains(key))
+            if (!SfxResPlayers.Keys.Contains(key))
             {
                 throw new Exception(EXCEPTION_KEY_NOT_FOUND);
             }
 
             if (onlyLooping)
             {
-                _sfxResPlayers[key].StopSfx(true);
+                SfxResPlayers[key].StopSfx(true);
             }
             else if (onlyNotLooping)
             {
-                _sfxResPlayers[key].StopSfx(false);
+                SfxResPlayers[key].StopSfx(false);
             }
             else
             {
-                _sfxResPlayers[key].StopSfx();
+                SfxResPlayers[key].StopSfx();
             }
         }
 
@@ -307,7 +296,7 @@ namespace NSoundEngine
          */
         public string[] GetBgmKeys()
         {
-            return _bgmPlayers.Keys.ToArray();
+            return BgmPlayers.Keys.ToArray();
         }
 
         /*
@@ -315,7 +304,7 @@ namespace NSoundEngine
          */
         public string[] GetSfxKeys()
         {
-            return _sfxResPlayers.Keys.ToArray();
+            return SfxResPlayers.Keys.ToArray();
         }
 
         /*
@@ -326,33 +315,31 @@ namespace NSoundEngine
          * a SFX it may contain any amount of entries.
          * 
          * Throws an exception when the key is not found or doesn't
-         * contain one of the mandatory suffixes.
+         * contain one of the mandatory prefixes.
          * 
          * \param key The resource's key that must contain either
-         * BGM_SUFFIX or SFX_SUFFIX.
+         * BGM_PREFIX or SFX_PREFIX.
          */
         public List<PlayerTuple> GetPlayerTuple(string key)
         {
-            if (key.Contains(BGM_SUFFIX))
+            if (key.Contains(BGM_PREFIX))
             {
-                if (!_bgmPlayers.Keys.Contains(key))
+                if (!BgmPlayers.Keys.Contains(key))
                 {
                     throw new Exception(EXCEPTION_KEY_NOT_FOUND);
                 }
-                return new List<PlayerTuple>() { _bgmPlayers[key] };
+                return new List<PlayerTuple>() { BgmPlayers[key] };
             }
-            else if (key.Contains(SFX_SUFFIX))
+
+            if (!key.Contains(SFX_PREFIX))
+                throw new Exception(EXCEPTION_NO_PREFIX);
+
+            if (!SfxResPlayers.Keys.Contains(key))
             {
-                if (!_sfxResPlayers.Keys.Contains(key))
-                {
-                    throw new Exception(EXCEPTION_KEY_NOT_FOUND);
-                }
-                return _sfxResPlayers[key].PlayerTupleList;
+                throw new Exception(EXCEPTION_KEY_NOT_FOUND);
             }
-            else
-            {
-                throw new Exception(EXCEPTION_NO_SUFFIX);
-            }
+
+            return SfxResPlayers[key].PlayerTupleList;
         }
     }
 }

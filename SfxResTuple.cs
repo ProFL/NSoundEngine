@@ -66,7 +66,7 @@ namespace NSoundEngine
          */
         public void PlaySfx(bool looping)
         {
-            PlayerTuple playerTuple = new PlayerTuple(Buffer, looping);
+            var playerTuple = new PlayerTuple(Buffer, looping);
             if (!looping)
             {
                 playerTuple.Player.PlaybackStopped += (sender, evArgs) =>
@@ -111,11 +111,22 @@ namespace NSoundEngine
         }
 
         /*
-         * Disposes of all this SFX's players.
+         * Calls StopSfx() to dispose of all this SFX's players.
          */
-        public void Dispose()
+        private void ReleaseUnmanagedResources()
         {
             StopSfx();
+        }
+
+        public void Dispose()
+        {
+            ReleaseUnmanagedResources();
+            GC.SuppressFinalize(this);
+        }
+
+        ~SfxResTuple()
+        {
+            ReleaseUnmanagedResources();
         }
     }
 }

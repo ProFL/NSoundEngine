@@ -86,11 +86,11 @@ namespace NSoundEngine
          */
         protected void LoopingCallback(object sender, EventArgs evArgs)
         {
-            if (IsLooping)
-            {
-                Mp3Reader.Position = 0;
-                Player.Play();
-            }
+            if (!IsLooping)
+                return;
+
+            Mp3Reader.Position = 0;
+            Player.Play();
         }
 
         /*
@@ -143,9 +143,9 @@ namespace NSoundEngine
         public void Dispose()
         {
             Stop();
-            Player.Dispose();
-            Mp3Reader.Dispose();
-            AudioStream.Dispose();
+            Player?.Dispose();
+            Mp3Reader?.Dispose();
+            AudioStream?.Dispose();
         }
     }
 }
